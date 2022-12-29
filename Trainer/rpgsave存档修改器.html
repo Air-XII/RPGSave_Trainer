@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="hlmio 2020-12-13">
+    <title>RPGSave存档修改器</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.14.1/lib/theme-chalk/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/element-ui@2.14.1/lib/index.min.js"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <el-row :gutter="10">
+            <el-col :xs="24" :sm="10" style="margin-top: 50px;">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <!-- (1) 选取文件 -->
+                    <div>
+                        <el-upload class="upload-demo" drag :auto-upload="1==2" :on-change="upload"
+                            :on-preview="clickFile" action="#">
+                            <i class="el-icon-upload"></i>
+                            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                        </el-upload>
+                    </div>
+
+                    <!-- (2) 加密内容 -->
+                    <div style="margin-top: 50px;">
+                        <el-input v-model="加密内容" placeholder="未读取文件">
+                            <template slot="prepend">原文：</template>
+                            <el-button slot="append" v-on:click="ctrl_c(加密内容)" icon="el-icon-document-copy"></el-button>
+                        </el-input>
+                    </div>
+
+                    <!-- (3) 加密按钮 -->
+                    <div style="margin-top: 15px;">
+                        <el-button v-on:click="decodeText_to_encodeText" icon="el-icon-upload2"></el-button>
+                    </div>
+
+                    <!-- (4) 解密内容 -->
+                    <div style="margin-top: 15px;">
+                        <el-input v-model="解密内容" placeholder="请输入内容">
+                            <template slot="prepend">解码：</template>
+                            <el-button slot="append" v-on:click="ctrl_c(解密内容)" icon="el-icon-document-copy"></el-button>
+                        </el-input>
+                    </div>
+
+                </div>
+            </el-col>
+
+            <el-col :xs="24" :sm="13" style="margin-top: 40px;">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <!-- (5) json内容 -->
+                    <div style="margin-top: 15px; width: 90%;">
+                        <el-input type="textarea" v-model="json内容" placeholder="请输入内容" :rows="18">
+                        </el-input>
+                    </div>
+
+                    <!-- (6) 转换按钮 -->
+                    <div style="margin-top: 15px;">
+                        <el-button v-on:click="change_and_encode_and_save(json内容)" icon="el-icon-download"></el-button>
+                        <el-button v-on:click="change_and_encode_and_ctrlC(json内容)" type="primary"
+                            icon="el-icon-check"></el-button>
+                        <el-button v-on:click="ctrl_c(json内容)" icon="el-icon-document-copy"></el-button>
+                    </div>
+                </div>
+            </el-col>
+        </el-row>
+
+        <el-row style="margin-top: 50px;">
+            <!--左占位--><el-col :xs="3" :sm="8">&nbsp;</el-col>
+            <el-col :xs="18" :sm="8" style="margin-top: 10px;">
+                <el-input v-model.number="金钱" type="number" placeholder="未读取">
+                    <template slot="prepend">金钱</template>
+                </el-input>
+            </el-col>
+            <!--右占位--><el-col :xs="3" :sm="8">&nbsp;</el-col>
+        </el-row>
+
+        <el-row style="margin-top: 15px;">
+            <template v-for="(角色,index) in 角色列表" v-if="index >= 1">
+                <!--左占位--><el-col :xs="3" :sm="1">&nbsp;</el-col>
+                <el-col :xs="18" :sm="6" style="margin-top: 15px;">
+                    <div>
+                        <el-input v-model="角色['_name']" placeholder="未读取">
+                            <template slot="prepend">姓名</template>
+                        </el-input>
+                        <el-input v-model.number="角色['_level']" type="number" placeholder="未读取"
+                            style="margin-top: 10px;">
+                            <template slot="prepend">等级</template>
+                        </el-input>
+                        <el-input v-model.number="角色['_paramPlus']['@a'][0]" type="number" placeholder="未读取">
+                            <template slot="prepend">生命</template>
+                        </el-input>
+                        <el-input v-model.number="角色['_paramPlus']['@a'][1]" type="number" placeholder="未读取">
+                            <template slot="prepend">魔力</template>
+                        </el-input>
+                        <el-input v-model.number="角色['_paramPlus']['@a'][2]" type="number" placeholder="未读取"
+                            style="margin-top: 5px;">
+                            <template slot="prepend">攻击</template>
+                        </el-input>
+                        <el-input v-model.number="角色['_paramPlus']['@a'][4]" type="number" placeholder="未读取">
+                            <template slot="prepend">魔攻</template>
+                        </el-input>
+                        <el-input v-model.number="角色['_paramPlus']['@a'][6]" type="number" placeholder="未读取">
+                            <template slot="prepend">敏捷</template>
+                        </el-input>
+                    </div>
+                </el-col>
+                <!--右占位-->
+                <el-col :xs="3" :sm="1" style="margin-top: 10px; visibility: hidden">
+                    <el-input placeholder="未读取">
+                        <template slot="prepend">占位</template>
+                    </el-input>
+                </el-col>
+            </template>
+        </el-row>
+
+        <el-row style="margin-top: 15px;">
+            <el-col :xs="24" :sm="24" style="margin-top: 15px;">
+                <div style="display: flex; justify-content: center;">
+                    <el-button v-on:click="change_and_encode_and_save(json对象)" icon="el-icon-download"></el-button>
+                    <el-button v-on:click="change_and_encode_and_ctrlC(json对象)" type="primary"
+                        icon="el-icon-check"></el-button>
+                </div>
+            </el-col>
+        </el-row>
+
+        <el-row>
+            <el-col :xs="20" :sm="6" style="margin-top: 50px;">
+            </el-col>
+        </el-row>
+
+        <el-backtop></el-backtop>
+    </div>
+
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                文件路径: null,
+                加密内容: null,
+                解密内容: null,
+                json内容: null,
+                json对象: {},
+
+                角色列表: []
+            },
+            computed: {
+                金钱: {
+                    get: function () {
+                        try {
+                            var _ = this.json对象["party"]["_gold"]
+                        } catch (error) {
+                            console.log(error)
+                            _ = "未取到值"
+                        }
+                        return _
+                    },
+                    set: function (value) {
+                        try {
+                            this.json对象["party"]["_gold"] = value
+                        } catch (error) {
+                            console.log(error)
+                        }
+                    }
+                }
+            },
+            watch: {
+                加密内容(新值, 旧值) {
+                    this.解密内容 = this.读取解密内容(新值)
+                },
+                解密内容(新值, 旧值) {
+                    this.json内容 = this.读取json内容(新值)
+                },
+                json内容(新值, 旧值) {
+                    this.json对象 = this.to_json_obj(新值)
+                    try {
+                        this.角色列表 = this.json对象["actors"]["_data"]["@a"]
+                    } catch (error) {
+                        console.log(error)
+                        this.角色列表 = []
+                    }
+                }
+            },
+            methods: {
+                // (1)
+                upload: function (file, fileList) {
+                    this.文件路径 = file.name
+                    file.文件路径 = this.文件路径
+                    this.读取加密内容(file.raw)
+                },
+                clickFile: function (file) {
+                    this.读取加密内容(file.raw)
+                    this.文件路径 = file.文件路径
+                },
+
+                // (2)
+                读取加密内容: function (file) {
+                    var _this = this
+                    var reader = new FileReader()
+                    reader.readAsText(file)
+                    reader.onload = function () {
+                        _this.加密内容 = this.result
+                    }
+                },
+
+                // (3)
+                decodeText_to_encodeText: function () {
+                    this.加密内容 = this.encode(this.解密内容)
+                    this.ctrl_c(this.加密内容)
+                },
+
+                // (4)
+                读取解密内容: function (加密内容) {
+                    return this.decode(加密内容)
+                },
+
+                // (5)
+                读取json内容: function (解密内容) {
+                    return JSON.stringify(JSON.parse(解密内容), null, 2)
+                },
+
+                // (6)
+                change_and_encode_and_save: function (obj) {
+                    this.change_and_encode(obj)
+                    this.save(this.加密内容, this.文件路径)
+                },
+                change_and_encode_and_ctrlC: function (obj) {
+                    this.change_and_encode(obj)
+                    this.ctrl_c(this.加密内容)
+                },
+
+
+
+                // ------------ 辅助方法 ------------
+
+                change_and_encode: function (obj) {
+                    let _ = this.to_json_str(obj)
+                    this.加密内容 = this.encode(_)
+                },
+
+                ctrl_c: function (text) {
+                    this.copyText(text)
+                    this.$message('已复制');
+                },
+
+
+                // ------------ 工具方法 ------------
+
+                to_json_obj: function (obj) {
+                    return JSON.parse(obj)
+                },
+                to_json_str: function (obj) {
+                    if (typeof (obj) == "string") {
+                        return JSON.stringify(JSON.parse(obj))
+                    }
+                    return JSON.stringify(obj)
+                },
+                encode: function (text) {
+                    return LZString.compressToBase64(text)
+                },
+                decode: function (text) {
+                    return LZString.decompressFromBase64(text)
+                },
+                save: function (text, 文件名 = "a1.txt") {
+                    let pos = 文件名.lastIndexOf("/")
+                    文件名 = 文件名.substring(pos + 1)
+                    var file = new File([text], 文件名, { type: "text/plain;charset=utf-8" })
+                    saveAs(file)
+                },
+
+
+                // 复制的方法
+                copyText: function (text, callback) { // text: 要复制的内容， callback: 回调
+                    var tag = document.createElement('input');
+                    tag.setAttribute('id', 'cp_hgz_input');
+                    tag.value = text;
+                    document.getElementsByTagName('body')[0].appendChild(tag);
+                    document.getElementById('cp_hgz_input').select();
+                    document.execCommand('copy');
+                    document.getElementById('cp_hgz_input').remove();
+                    if (callback) { callback(text) }
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
