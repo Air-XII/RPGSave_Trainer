@@ -1,7 +1,7 @@
 # Trainer for RPGSave
 
 - **English**
-- [简体中文](readme.md)
+- [简体中文](/README.md)
 
 ## Intro
 
