@@ -5,7 +5,7 @@
 
 ## Intro
 
-Archive modifier, which supports most games made with RPGMaker engine. The archive format should be **".rpgssave"** , otherwise it may not be supported.
+Archive modifier, which supports most games made with RPGMaker engine. The archive format should be **".rpgssave"** , otherwise it may not be supported, Internet connection is required.
 
 Transferred from a master in CSDN.
 
