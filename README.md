@@ -1,7 +1,7 @@
 # RPGSave_Trainer
 
 - **简体中文**
-- [English](readmeEN.md)
+- [English](/readmeEN.md)
 
 ## 简介
 
