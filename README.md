@@ -1,8 +1,5 @@
 # RPGSave_Trainer
 
-- **简体中文**
-- [English](/readmeEN.md)
-
 ### Html版
 
 支持大多数使用RPGMaker引擎制作的游戏，存档格式应为 **".rpgsave"** ，否则可能不支持，使用修改器需要联网。
